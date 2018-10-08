@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "Eigen-3.3/Eigen/Core"
+#include "helper.h"
 
 using namespace std;
 
