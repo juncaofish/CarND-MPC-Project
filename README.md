@@ -1,7 +1,58 @@
 # CarND-Controls-MPC
-Self-Driving Car Engineer Nanodegree Program
+Self-Driving Car Engineer Nano degree Program
 
 ---
+## Project Description
+### Overview
+Model predictive control ([MPC](https://en.wikipedia.org/wiki/Model_predictive_control)) is an advanced method of process control which relies on dynamic models of the process. 
+Model predictive controllers rely on dynamic models of the process, most often linear empirical models obtained by system identification. 
+The main advantage of MPC is the fact that it allows the current timeslot to be optimized, while keeping future timeslots in account. Thus MPC has the ability to anticipate future events and can take control actions accordingly, which differs from Previous PID controllers. 
+
+The MPC controller framework consists in four main components:
+
+1. *Trajectory* taken in consideration during optimization. This is parameterised by a number of time steps N spaced out by a time dt. Clearly, the number of variables optimized is directly proportional to N, so this must be considered in case there are computational constraints.
+
+2. *Vehicle Model*, equations that describes system behaviour and updates across time steps. We used a simplified kinematic model (so called bicycle model) described by a state of six parameters:
+    * **x** car position (x-axis)
+    * **y** car position (y-axis)
+    * **psi** car's heading direction
+    * **v** car's velocity
+    * **cte** cross-track error
+    * **epsi** orientation error
+
+3. *Constraints* in actuators' response. In this project we set these constraints as follows:
+    * **steering**: bounded in range *[-25°, 25°]*
+    * **acceleration**: bounded in range *[-1, 1]* from full brake to full throttle
+4. *Cost Function* on whose optimization is based the whole control process. 
+    * Usually cost function is made of the sum of different terms. 
+    * Besides the main terms that depends on reference values (e.g. cross-track or heading error)
+    * Other regular terms are present to enforce the smoothness in the controller response.
+    Cost function for this project is implemented at lines 53-80 in MPC.cpp.
+
+### Tuning Trajectory Parameters
+Both N and dt are fundamental parameters in the optimization process. In particular, T = N * dt constitutes the prediction horizon considered during optimisation. 
+**N** is the number of timesteps in the horizon. 
+**dt** is how much time elapses between actuations.
+**T** should be as large as possible, while dt should be as small as possible.
+These values have to be tuned keeping in mind a couple of things:
+* large dt result in less frequent actuations, which in turn could result in the difficulty in following a continuous reference trajectory (so called discreatization error)
+* despite the fact that having a large T could benefit the control process, consider that predicting too far in the future does not make sense in real-world scenarios.
+* large T and small dt lead to large N. As mentioned above, the number of variables optimized is directly proportional to N, so will lead to an higher computational cost.
+In the project I empirically set (by visually inspecting the vehicle's behaviour in the simulator) these parameters to be N=10 and dt=0.1, for a total of T=1s in the future.
+
+### Tuning cost function terms weights
+Weights for cost function terms that need tuning include:
+* cte/epsi/velocity reference terms
+* actuator terms
+* actuators smoothness in change
+
+Generally, the weights are kept as 1 and only adjusted according to the actual behaviour for specific terms.
+
+### Changing Reference System
+In order to ease later computation, coordinates are converted from global reference system into car's own reference system.
+
+### Dealing with Latency
+To mimic real driving conditions where the car does actuate the commands instantly, a 100ms latency delay has been introduced before sending the data message to the simulator. In order to deal with latency, state is predicted one time step ahead before feeding it to the solver.
 
 ## Dependencies
 

@@ -1,5 +1,4 @@
 #include "MPC.h"
-//#include "helper.h"
 #include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 
@@ -23,7 +22,7 @@ double dt = .1; // duration
 // References values that will be included in objective function
 double ref_cte  = 0;
 double ref_epsi = 0;
-double ref_v    = 60;
+double ref_v    = 80;
 
 // Indexes on the 1D vector (for readability)
 size_t x_start      = 0;
@@ -37,6 +36,7 @@ size_t a_start      = delta_start   + N - 1;
 
 
 class FG_eval {
+
  public:
   // Fitted polynomial coefficients
   Eigen::VectorXd coeffs;
@@ -53,11 +53,11 @@ class FG_eval {
     fg[0] = 0;
 
     // Define weights for different terms of objective
-    const double cte_weight = 1;
+    const double cte_weight = 10;
     const double epsi_weight = 1;
     const double v_weight = 1;
     const double actuator_cost_weight = 10;
-    const double steer_change_cost_weight = 1;
+    const double steer_change_cost_weight = 10000;
     const double acc_change_cost_weight = 1;
 
     // Objective term 1: Keep close to reference values
@@ -109,9 +109,9 @@ class FG_eval {
       AD<double> a_0      = vars[a_start     + t - 1];
 
       AD<double> f_0 = coeffs[0] + \
-                             coeffs[1] * x_0 + \
-                             coeffs[2] * x_0 * x_0 + \
-                             coeffs[3] * x_0 * x_0 * x_0;
+                       coeffs[1] * x_0 + \
+                       coeffs[2] * x_0 * x_0 + \
+                       coeffs[3] * x_0 * x_0 * x_0;
 
       AD<double> psides_0 = CppAD::atan(coeffs[1] + 2 * coeffs[2] * x_0 + 3 * coeffs[3] * x_0 * x_0);
 
@@ -126,9 +126,8 @@ class FG_eval {
   }
 };
 
-//
+
 // MPC class definition implementation.
-//
 MPC::MPC() {}
 
 MPC::~MPC() {}

@@ -95,7 +95,7 @@ int main() {
               ptsy[i] = shift_x * sin(-psi) + shift_y * cos(-psi);
             }
 
-            // Convert to Eigen::VectorXd
+            // Convert std:vector to Eigen::VectorXd
             double *ptrx = &ptsx[0];
             Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, 6);
 
@@ -107,14 +107,13 @@ int main() {
 
             double cte = polyeval(coeffs, 0);
 
-            // before reference system change: double epsi = psi - atan(coeffs[1] + 2*px*coeffs[2] + 3*coeffs[3] * pow(px,2));
-            //double epsi = psi - atan(coeffs[1] + 2*px*coeffs[2] + 3*coeffs[3] * pow(px,2));
-            double epsi = -atan(coeffs[1]);
+            // before reference system change:
+            // ψdes is can be calculated as arctan(f'(x)).
+            double epsi = psi - atan(coeffs[1] + 2*px*coeffs[2] + 3*coeffs[3] * pow(px,2));
+//            double epsi = -atan(coeffs[1]);
 
             // Latency for predicting time at actuation
             const double dt = 0.1;
-
-//            const double Lf = 2.67;
 
             // Predict future state (take latency into account)
             // x, y and psi are all zero in the new reference system
@@ -135,8 +134,8 @@ int main() {
             vector<double> next_x_vals;
             vector<double> next_y_vals;
 
-            double poly_inc = 2.5; // step on x
-            int num_points = 25;    // how many point "in the future" to be plotted
+            double poly_inc = 5; // step on x
+            int num_points = 15;    // how many point "in the future" to be plotted
             for (int i = 1; i < num_points; ++i) {
               double future_x = poly_inc * i;
               double future_y = polyeval(coeffs, future_x);
@@ -146,7 +145,8 @@ int main() {
 
             // Normalize steering angle range [-deg2rad(25), deg2rad(25] -> [-1, 1].
 
-            const double angle_norm_factor = deg2rad(25) * Lf;
+            const double angle_norm_factor = deg2rad(25);
+            cout << "Angle:" << vars[0] << endl;
             double steer_value = vars[0] / angle_norm_factor;
             double throttle_value = vars[1];
 
@@ -200,11 +200,11 @@ int main() {
       }
   });
 
-  h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
+  h.onConnection([](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
       std::cout << "Connected!!!" << std::endl;
   });
 
-  h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER> ws, int code,
+  h.onDisconnection([](uWS::WebSocket<uWS::SERVER> ws, int code,
                          char *message, size_t length) {
       ws.close();
       std::cout << "Disconnected" << std::endl;
